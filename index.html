@@ -2,21 +2,247 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Página Web Oficial</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cyber Defender</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #121212; color: white; padding: 50px 20px; }
-        .tarjeta { background: #1e1e1e; padding: 30px; border-radius: 12px; max-width: 400px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        h1 { color: #00e676; }
-        p { color: #cccccc; line-height: 1.6; }
+        * { box-sizing: border-box; user-select: none; }
+        body {
+            margin: 0;
+            background: radial-gradient(circle at center, #111827 0%, #05070a 100%);
+            color: #fff;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+        #hud {
+            width: 340px;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            backdrop-filter: blur(5px);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .neon-cyan { color: #00f3ff; text-shadow: 0 0 8px #00f3ff; }
+        .neon-pink { color: #ff007f; text-shadow: 0 0 8px #ff007f; }
+        canvas {
+            background: #070a12;
+            border: 2px solid #00f3ff;
+            border-radius: 14px;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.25);
+        }
+        #overlay {
+            position: absolute;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(5, 7, 10, 0.85);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid #ff007f;
+            box-shadow: 0 0 30px rgba(255, 0, 127, 0.4);
+            text-align: center;
+        }
+        button {
+            margin-top: 15px;
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #05070a;
+            background: linear-gradient(90deg, #00f3ff, #00ff88);
+            border: none;
+            border-radius: 25px;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.6);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <div class="tarjeta">
-        <h1>¡Hola, Mundo!</h1>
-        <p>Esta es mi primera página web publicada en internet y creada desde mi celular.</p>
+    <div id="hud">
+        <div>SCORE: <span id="puntos" class="neon-cyan">0</span></div>
+        <div>BEST: <span id="record" class="neon-pink">0</span></div>
     </div>
 
+    <canvas id="juego" width="340" height="500"></canvas>
+
+    <div id="overlay">
+        <h2 class="neon-pink" style="margin:0; font-size: 26px;">SISTEMA CAÍDO</h2>
+        <p id="finalScore" style="color:#ccc; margin: 10px 0;">Puntos: 0</p>
+        <button onclick="iniciar()">REINICIAR SISTEMA</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("juego");
+        const ctx = canvas.getContext("2d");
+        const txtPuntos = document.getElementById("puntos");
+        const txtRecord = document.getElementById("record");
+        const overlay = document.getElementById("overlay");
+        const finalScore = document.getElementById("finalScore");
+
+        let record = localStorage.getItem("cyberRecord") || 0;
+        txtRecord.innerText = record;
+
+        let nave, balas, enemigos, particulas, estrellas, puntos, frame, activo;
+
+        function iniciar() {
+            nave = { x: 170, y: 440, r: 16 };
+            balas = [];
+            enemigos = [];
+            particulas = [];
+            estrellas = Array.from({ length: 40 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                v: Math.random() * 1.5 + 0.5
+            }));
+            puntos = 0;
+            frame = 0;
+            activo = true;
+            txtPuntos.innerText = "0";
+            overlay.style.display = "none";
+            loop();
+        }
+
+        // Control táctil fluido
+        canvas.addEventListener("touchmove", (e) => {
+            if (!activo) return;
+            let rect = canvas.getBoundingClientRect();
+            let x = e.touches[0].clientX - rect.left;
+            nave.x = Math.max(20, Math.min(canvas.width - 20, x));
+        });
+
+        function crearExplosion(x, y, color) {
+            for (let i = 0; i < 14; i++) {
+                particulas.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    vida: 1,
+                    color
+                });
+            }
+        }
+
+        function loop() {
+            if (!activo) return;
+            frame++;
+            ctx.fillStyle = "rgba(7, 10, 18, 0.35)"; // Efecto estela neón
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Fondo de estrellas
+            ctx.fillStyle = "rgba(255,255,255,0.4)";
+            estrellas.forEach(s => {
+                s.y += s.v;
+                if (s.y > canvas.height) s.y = 0;
+                ctx.fillRect(s.x, s.y, 1.5, 1.5);
+            });
+
+            // Disparo láser automático cada 12 frames
+            if (frame % 12 === 0) {
+                balas.push({ x: nave.x, y: nave.y - 18 });
+            }
+
+            // Dibujar Nave (Triángulo Neón)
+            ctx.save();
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "#00f3ff";
+            ctx.fillStyle = "#00f3ff";
+            ctx.beginPath();
+            ctx.moveTo(nave.x, nave.y - 18);
+            ctx.lineTo(nave.x - 15, nave.y + 14);
+            ctx.lineTo(nave.x + 15, nave.y + 14);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // Mover y dibujar láseres
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "#00ff88";
+            ctx.fillStyle = "#00ff88";
+            for (let i = balas.length - 1; i >= 0; i--) {
+                balas[i].y -= 9;
+                ctx.fillRect(balas[i].x - 2, balas[i].y, 4, 14);
+                if (balas[i].y < 0) balas.splice(i, 1);
+            }
+
+            // Generar enemigos (Nodos corruptos)
+            let frecuencia = Math.max(22, 55 - Math.floor(puntos / 10));
+            if (frame % frecuencia === 0) {
+                enemigos.push({
+                    x: Math.random() * (canvas.width - 40) + 20,
+                    y: -20,
+                    r: 15,
+                    vel: 2.2 + (puntos * 0.04)
+                });
+            }
+
+            // Enemigos y colisiones
+            for (let i = enemigos.length - 1; i >= 0; i--) {
+                let e = enemigos[i];
+                e.y += e.vel;
+
+                ctx.save();
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = "#ff007f";
+                ctx.strokeStyle = "#ff007f";
+                ctx.lineWidth = 3;
+                ctx.strokeRect(e.x - e.r, e.y - e.r, e.r * 2, e.r * 2);
+                ctx.restore();
+
+                // Choque con bala
+                for (let j = balas.length - 1; j >= 0; j--) {
+                    let b = balas[j];
+                    if (Math.hypot(e.x - b.x, e.y - b.y) < e.r + 6) {
+                        crearExplosion(e.x, e.y, "#ff007f");
+                        enemigos.splice(i, 1);
+                        balas.splice(j, 1);
+                        puntos += 10;
+                        txtPuntos.innerText = puntos;
+                        if (puntos > record) {
+                            record = puntos;
+                            txtRecord.innerText = record;
+                            localStorage.setItem("cyberRecord", record);
+                        }
+                        break;
+                    }
+                }
+
+                // Choque con nave o llega al fondo
+                if (enemigos[i] && (Math.hypot(e.x - nave.x, e.y - nave.y) < e.r + 12 || e.y > canvas.height)) {
+                    crearExplosion(nave.x, nave.y, "#00f3ff");
+                    activo = false;
+                    finalScore.innerText = "Puntuación final: " + puntos;
+                    overlay.style.display = "flex";
+                    return;
+                }
+            }
+
+            // Partículas de explosión
+            for (let i = particulas.length - 1; i >= 0; i--) {
+                let p = particulas[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vida -= 0.04;
+                ctx.globalAlpha = Math.max(0, p.vida);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 4, 4);
+                if (p.vida <= 0) particulas.splice(i, 1);
+            }
+            ctx.globalAlpha = 1;
+
+            requestAnimationFrame(loop);
+        }
+
+        iniciar();
+    </script>
 </body>
 </html>
