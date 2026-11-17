@@ -3,145 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CYBER STRIKE 3D</title>
+    <title>BLACK OPS FPS</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body {
-            margin: 0; padding: 0; background: #04060c;
+            margin: 0; padding: 0; background: #000;
             overflow: hidden; touch-action: none;
             font-family: 'Segoe UI', Roboto, Arial, sans-serif;
         }
         canvas { display: block; width: 100vw; height: 100vh; }
 
-        /* HUD Superior */
+        /* HUD Táctico estilo Call of Duty */
         #hud {
-            position: fixed; top: 15px; left: 15px; right: 15px;
-            display: flex; justify-content: space-between; align-items: center;
+            position: fixed; top: 12px; left: 12px; right: 12px;
+            display: flex; justify-content: space-between; align-items: flex-start;
             pointer-events: none; z-index: 10;
         }
-        .panel-hud {
-            background: rgba(10, 18, 35, 0.75);
-            border: 1px solid rgba(0, 243, 255, 0.4);
-            padding: 8px 14px; border-radius: 10px;
-            color: #00f3ff; font-weight: bold; font-size: 16px;
-            text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
+        #radar {
+            width: 95px; height: 95px; border-radius: 50%;
+            background: rgba(5, 15, 25, 0.8);
+            border: 2px solid #00f3ff;
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.4);
         }
-        #vida-box {
-            width: 120px; height: 12px; background: rgba(255, 255, 255, 0.15);
-            border-radius: 6px; overflow: hidden; margin-top: 4px;
+        .stats-derecha {
+            display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
         }
-        #vida-bar {
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, #00ff88, #00f3ff);
-            transition: width 0.15s ease-out;
+        .caja-hud {
+            background: rgba(10, 15, 25, 0.8);
+            border-left: 3px solid #00f3ff;
+            padding: 6px 12px; color: #fff; font-weight: bold; font-size: 14px;
         }
+        #barra-salud-fondo {
+            width: 130px; height: 10px; background: rgba(255,255,255,0.2); margin-top: 4px;
+        }
+        #barra-salud {
+            width: 100%; height: 100%; background: #00ff88; transition: width 0.15s;
+        }
+        #municion-txt { color: #ffaa00; font-size: 18px; }
 
-        /* Controles Táctiles */
-        #controles {
-            position: fixed; bottom: 22px; left: 18px; right: 18px;
-            display: flex; justify-content: space-between; align-items: flex-end;
-            z-index: 20; pointer-events: none;
+        /* Controles Táctiles FPS */
+        #zona-joystick {
+            position: fixed; bottom: 25px; left: 25px;
+            width: 120px; height: 120px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(0, 243, 255, 0.4);
+            z-index: 20;
         }
-        .grupo-botones { display: flex; gap: 14px; pointer-events: auto; align-items: center; }
-        .btn {
-            width: 66px; height: 66px; border-radius: 50%;
-            background: rgba(0, 243, 255, 0.14);
+        #palanca {
+            position: absolute; top: 35px; left: 35px;
+            width: 50px; height: 50px; border-radius: 50%;
+            background: rgba(0, 243, 255, 0.6);
+            box-shadow: 0 0 12px #00f3ff;
+        }
+        #zona-camara {
+            position: fixed; top: 0; right: 0; width: 55vw; height: 100vh;
+            z-index: 15;
+        }
+        .botones-accion {
+            position: fixed; bottom: 25px; right: 20px;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
+            z-index: 25;
+        }
+        .fila-botones { display: flex; gap: 12px; align-items: center; }
+        .btn-fps {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: rgba(15, 23, 42, 0.85);
             border: 2px solid #00f3ff; color: #00f3ff;
-            font-size: 24px; font-weight: bold;
+            font-size: 11px; font-weight: bold;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.25);
         }
-        .btn.presionado { background: rgba(0, 243, 255, 0.5); transform: scale(0.92); }
-        #btnSalto {
-            width: 56px; height: 56px; font-size: 12px;
-            border-color: #00ff88; color: #00ff88;
-            background: rgba(0, 255, 136, 0.14);
+        .btn-fps:active { background: #00f3ff; color: #000; }
+        #btnDisparar {
+            width: 82px; height: 82px; border-radius: 50%;
+            background: rgba(255, 0, 85, 0.35);
+            border: 3px solid #ff0055; color: #fff;
+            font-size: 14px; font-weight: bold;
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.5);
+            display: flex; align-items: center; justify-content: center;
         }
-        #btnSalto.presionado { background: rgba(0, 255, 136, 0.5); }
-        #btnFuego {
-            width: 80px; height: 80px; font-size: 15px;
-            border-color: #ff007f; color: #ff007f;
-            background: rgba(255, 0, 127, 0.2);
-            box-shadow: 0 0 20px rgba(255, 0, 127, 0.4);
-        }
-        #btnFuego.presionado { background: rgba(255, 0, 127, 0.6); transform: scale(0.92); }
+        #btnDisparar:active { background: rgba(255, 0, 85, 0.8); transform: scale(0.93); }
 
-        /* Pantallas de Inicio y Game Over */
-        .pantalla {
-            position: fixed; inset: 0; background: rgba(4, 6, 12, 0.9);
+        /* Pantallas */
+        .pantalla-overlay {
+            position: fixed; inset: 0; background: rgba(5, 8, 15, 0.94);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; z-index: 30; padding: 20px;
+            text-align: center; z-index: 50; padding: 20px; color: #fff;
         }
-        h1 {
-            font-size: 34px; margin: 0 0 10px; color: #00f3ff;
-            text-shadow: 0 0 18px #00f3ff; letter-spacing: 2px;
+        h1 { font-size: 32px; color: #00f3ff; margin: 0 0 8px; letter-spacing: 2px; text-shadow: 0 0 15px #00f3ff; }
+        .sub { color: #ffaa00; font-weight: bold; margin-bottom: 15px; font-size: 14px; }
+        p { color: #cbd5e1; font-size: 15px; max-width: 310px; line-height: 1.5; margin-bottom: 25px; }
+        .btn-start {
+            padding: 16px 40px; font-size: 18px; font-weight: bold;
+            background: linear-gradient(90deg, #ffaa00, #ff0055);
+            border: none; border-radius: 8px; color: #fff;
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
         }
-        p { color: #cbd5e1; font-size: 16px; max-width: 300px; line-height: 1.5; margin-bottom: 25px; }
-        .btn-jugar {
-            padding: 15px 38px; font-size: 18px; font-weight: bold;
-            background: linear-gradient(90deg, #00f3ff, #00ff88);
-            border: none; border-radius: 30px; color: #04060c;
-            box-shadow: 0 0 25px rgba(0, 243, 255, 0.6);
+        #dano-flash {
+            position: fixed; inset: 0; background: rgba(255, 0, 0, 0.35);
+            pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 12;
         }
     </style>
 </head>
 <body>
 
+    <div id="dano-flash"></div>
+
     <div id="hud">
-        <div class="panel-hud">
-            <div>SALUD</div>
-            <div id="vida-box"><div id="vida-bar"></div></div>
-        </div>
-        <div class="panel-hud" style="text-align: right;">
-            <div>PUNTOS: <span id="txtPuntos">0</span></div>
-            <div style="font-size: 12px; color: #00ff88;">RÉCORD: <span id="txtRecord">0</span></div>
-        </div>
-    </div>
-
-    <div id="controles">
-        <div class="grupo-botones">
-            <div class="btn" id="btnIzq">◀</div>
-            <div class="btn" id="btnDer">▶</div>
-        </div>
-        <div class="grupo-botones">
-            <div class="btn" id="btnSalto">SALTO</div>
-            <div class="btn" id="btnFuego">FUEGO</div>
+        <canvas id="radar" width="95" height="95"></canvas>
+        <div class="stats-derecha">
+            <div class="caja-hud">BAJAS: <span id="bajas-txt" style="color:#00f3ff;">0</span> | OLEADA: <span id="oleada-txt" style="color:#ffaa00;">1</span></div>
+            <div class="caja-hud">
+                SALUD
+                <div id="barra-salud-fondo"><div id="barra-salud"></div></div>
+            </div>
+            <div class="caja-hud">BALAS: <span id="municion-txt">30 / ∞</span></div>
         </div>
     </div>
 
-    <!-- Pantalla de Inicio -->
-    <div id="pantallaInicio" class="pantalla">
-        <h1>CYBER STRIKE 3D</h1>
-        <p>Elimina a los drones enemigos antes de que crucen tu línea defensiva. Usa los botones inferiores para moverte, saltar y disparar.</p>
-        <button class="btn-jugar" onclick="comenzarJuego()">INICIAR MISIÓN</button>
+    <div id="zona-joystick"><div id="palanca"></div></div>
+    <div id="zona-camara"></div>
+
+    <div class="botones-accion">
+        <div class="fila-botones">
+            <div class="btn-fps" id="btnMira">MIRA</div>
+            <div class="btn-fps" id="btnRecargar">RECARGA</div>
+        </div>
+        <div id="btnDisparar">FUEGO</div>
     </div>
 
-    <!-- Pantalla Game Over -->
-    <div id="pantallaOver" class="pantalla" style="display: none;">
-        <h1 style="color: #ff007f; text-shadow: 0 0 18px #ff007f;">MISIÓN FALLIDA</h1>
-        <p id="resumenPuntos">Puntuación final: 0</p>
-        <button class="btn-jugar" onclick="comenzarJuego()">REINTENTAR</button>
+    <div id="menuInicio" class="pantalla-overlay">
+        <div class="sub">OPERACIÓN TÁCTICA FPS</div>
+        <h1>BLACK OPS 3D</h1>
+        <p><b>Izquierda:</b> Usa el joystick para moverte.<br><b>Derecha:</b> Desliza para apuntar y toca FUEGO para disparar.</p>
+        <button class="btn-start" id="btnIniciarReal">ENTRAR AL COMBATE</button>
     </div>
 
-    <canvas id="lienzo"></canvas>
+    <div id="menuOver" class="pantalla-overlay" style="display:none;">
+        <h1 style="color:#ff0055; text-shadow:0 0 15px #ff0055;">SOLDADO ABATIDO</h1>
+        <p id="statsFinales">Bajas confirmadas: 0</p>
+        <button class="btn-start" id="btnReintentarReal">VOLVER A DESPLEGAR</button>
+    </div>
+
+    <canvas id="pantalla3D"></canvas>
 
     <script>
-        const canvas = document.getElementById("lienzo");
+        const canvas = document.getElementById("pantalla3D");
         const ctx = canvas.getContext("2d");
+        const radarCanvas = document.getElementById("radar");
+        const rCtx = radarCanvas.getContext("2d");
 
-        let W, H, horizonteY, fov;
-        function ajustarPantalla() {
+        let W = canvas.width = window.innerWidth;
+        let H = canvas.height = window.innerHeight;
+        window.addEventListener("resize", () => {
             W = canvas.width = window.innerWidth;
             H = canvas.height = window.innerHeight;
-            horizonteY = H * 0.36;
-            fov = W * 0.85;
-        }
-        window.addEventListener("resize", ajustarPantalla);
-        ajustarPantalla();
+        });
 
-        // Sintetizador de Audio Web (Sin archivos externos)
+        // Mapa de la Arena 3D (1 = Muro, 2 = Muro Neón, 0 = Espacio libre)
+        const MAPA = [,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        // Estado del Juego
+        let jugando = false;
+        let jugador = { x: 2.5, y: 2.5, dir: 0, salud: 100, balas: 30, recargando: false, zoom: false };
+        let enemigos = [];
+        let bajas = 0;
+        let oleada = 1;
+        let retrocesoArma = 0;
+        let destelloDisparo = 0;
+        let pasoAnim = 0;
+        let joyX = 0, joyY = 0;
+        let disparando = false;
+        let ultimoDisparo = 0;
+        let ultimoFrame = 0;
+
+        // Audio Sintetizado Seguro
         let audioCtx = null;
-        function tocarSonido(tipo) {
+        function sonido(tipo) {
             try {
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === "suspended") audioCtx.resume();
@@ -149,96 +200,36 @@
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                const ahora = audioCtx.currentTime;
+                const t = audioCtx.currentTime;
 
-                if (tipo === "disparo") {
+                if (tipo === "tiro") {
                     osc.type = "sawtooth";
-                    osc.frequency.setValueAtTime(650, ahora);
-                    osc.frequency.exponentialRampToValueAtTime(110, ahora + 0.09);
-                    gain.gain.setValueAtTime(0.08, ahora);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ahora + 0.09);
-                    osc.start(ahora); osc.stop(ahora + 0.09);
-                } else if (tipo === "explosion") {
-                    osc.type = "square";
-                    osc.frequency.setValueAtTime(140, ahora);
-                    osc.frequency.exponentialRampToValueAtTime(30, ahora + 0.22);
-                    gain.gain.setValueAtTime(0.14, ahora);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ahora + 0.22);
-                    osc.start(ahora); osc.stop(ahora + 0.22);
-                } else if (tipo === "dano") {
+                    osc.frequency.setValueAtTime(320, t);
+                    osc.frequency.exponentialRampToValueAtTime(55, t + 0.08);
+                    gain.gain.setValueAtTime(0.15, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+                    osc.start(t); osc.stop(t + 0.08);
+                } else if (tipo === "hit") {
+                    osc.type = "sine";
+                    osc.frequency.setValueAtTime(900, t);
+                    gain.gain.setValueAtTime(0.1, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+                    osc.start(t); osc.stop(t + 0.05);
+                } else if (tipo === "recarga") {
                     osc.type = "triangle";
-                    osc.frequency.setValueAtTime(90, ahora);
-                    osc.frequency.linearRampToValueAtTime(45, ahora + 0.25);
-                    gain.gain.setValueAtTime(0.2, ahora);
-                    gain.gain.linearRampToValueAtTime(0.001, ahora + 0.25);
-                    osc.start(ahora); osc.stop(ahora + 0.25);
+                    osc.frequency.setValueAtTime(220, t);
+                    osc.frequency.setValueAtTime(440, t + 0.12);
+                    gain.gain.setValueAtTime(0.1, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+                    osc.start(t); osc.stop(t + 0.25);
                 }
-            } catch (e) {}
+            } catch (err) {}
         }
 
-        // Proyección 3D -> 2D
-        function proyectar(x, y, z) {
-            const escala = fov / (fov + z);
-            const sx = W / 2 + x * escala;
-            const sy = horizonteY + (y + 160) * escala;
-            return { x: sx, y: sy, escala };
-        }
+        // Controles: Joystick Izquierdo
+        const zonaJoy = document.getElementById("zona-joystick");
+        const palanca = document.getElementById("palanca");
+        let joyTouchId = null;
 
-        // Variables de estado
-        let activo = false;
-        let puntos = 0;
-        let record = localStorage.getItem("cyberStrike3DRecord") || 0;
-        document.getElementById("txtRecord").innerText = record;
-
-        let jugador = { x: 0, y: 0, vy: 0, enSuelo: true, retroceso: 0, paso: 0 };
-        let balas = [];
-        let enemigos = [];
-        let particulas = [];
-        let estrellas = [];
-        let gridOffset = 0;
-        let ultimoTiempo = 0;
-        let tiempoSpawn = 0;
-        let tiempoDisparo = 0;
-
-        // Controles
-        const estadoBotones = { izq: false, der: false, fuego: false };
-        function enlazarBoton(id, clave) {
-            const el = document.getElementById(id);
-            el.addEventListener("touchstart", (e) => {
-                e.preventDefault();
-                estadoBotones[clave] = true;
-                el.classList.add("presionado");
-            });
-            el.addEventListener("touchend", (e) => {
-                e.preventDefault();
-                estadoBotones[clave] = false;
-                el.classList.remove("presionado");
-            });
-        }
-        enlazarBoton("btnIzq", "izq");
-        enlazarBoton("btnDer", "der");
-        enlazarBoton("btnFuego", "fuego");
-
-        document.getElementById("btnSalto").addEventListener("touchstart", (e) => {
+        zonaJoy.addEventListener("touchstart", (e) => {
             e.preventDefault();
-            const el = document.getElementById("btnSalto");
-            el.classList.add("presionado");
-            if (activo && jugador.enSuelo) {
-                jugador.vy = -480;
-                jugador.enSuelo = false;
-            }
-        });
-        document.getElementById("btnSalto").addEventListener("touchend", (e) => {
-            e.preventDefault();
-            document.getElementById("btnSalto").classList.remove("presionado");
-        });
-
-        // Inicializar estrellas de fondo
-        for (let i = 0; i < 45; i++) {
-            estrellas.push({
-                x: Math.random() * 2000 - 1000,
-                y: Math.random() * 350 - 380,
-                r: Math.random() * 1.8 + 0.5
-            });
-        }
-
