@@ -3,62 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLACK OPS FPS</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#05080f">
+    <title>BLACK OPS 3D</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body {
-            margin: 0; padding: 0; background: #000;
+            margin: 0; padding: 0; background: #05080f;
             overflow: hidden; touch-action: none;
             font-family: 'Segoe UI', Roboto, Arial, sans-serif;
         }
         canvas { display: block; width: 100vw; height: 100vh; }
 
-        /* HUD Táctico estilo Call of Duty */
         #hud {
             position: fixed; top: 12px; left: 12px; right: 12px;
             display: flex; justify-content: space-between; align-items: flex-start;
             pointer-events: none; z-index: 10;
         }
         #radar {
-            width: 95px; height: 95px; border-radius: 50%;
-            background: rgba(5, 15, 25, 0.8);
+            width: 90px; height: 90px; border-radius: 50%;
+            background: rgba(5, 15, 25, 0.85);
             border: 2px solid #00f3ff;
             box-shadow: 0 0 12px rgba(0, 243, 255, 0.4);
         }
-        .stats-derecha {
-            display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
-        }
+        .stats-derecha { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
         .caja-hud {
-            background: rgba(10, 15, 25, 0.8);
+            background: rgba(10, 15, 25, 0.85);
             border-left: 3px solid #00f3ff;
-            padding: 6px 12px; color: #fff; font-weight: bold; font-size: 14px;
+            padding: 6px 12px; color: #fff; font-weight: bold; font-size: 13px;
         }
-        #barra-salud-fondo {
-            width: 130px; height: 10px; background: rgba(255,255,255,0.2); margin-top: 4px;
-        }
-        #barra-salud {
-            width: 100%; height: 100%; background: #00ff88; transition: width 0.15s;
-        }
-        #municion-txt { color: #ffaa00; font-size: 18px; }
+        #barra-salud-fondo { width: 120px; height: 10px; background: rgba(255,255,255,0.2); margin-top: 4px; }
+        #barra-salud { width: 100%; height: 100%; background: #00ff88; transition: width 0.15s; }
+        #municion-txt { color: #ffaa00; font-size: 16px; }
 
-        /* Controles Táctiles FPS */
         #zona-joystick {
             position: fixed; bottom: 25px; left: 25px;
-            width: 120px; height: 120px; border-radius: 50%;
+            width: 115px; height: 115px; border-radius: 50%;
             background: rgba(255, 255, 255, 0.08);
             border: 2px solid rgba(0, 243, 255, 0.4);
             z-index: 20;
         }
         #palanca {
-            position: absolute; top: 35px; left: 35px;
+            position: absolute; top: 32px; left: 32px;
             width: 50px; height: 50px; border-radius: 50%;
-            background: rgba(0, 243, 255, 0.6);
+            background: rgba(0, 243, 255, 0.65);
             box-shadow: 0 0 12px #00f3ff;
         }
-        #zona-camara {
-            position: fixed; top: 0; right: 0; width: 55vw; height: 100vh;
-            z-index: 15;
-        }
+        #zona-camara { position: fixed; top: 0; right: 0; width: 55vw; height: 100vh; z-index: 15; }
         .botones-accion {
             position: fixed; bottom: 25px; right: 20px;
             display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
@@ -66,37 +57,33 @@
         }
         .fila-botones { display: flex; gap: 12px; align-items: center; }
         .btn-fps {
-            width: 56px; height: 56px; border-radius: 50%;
-            background: rgba(15, 23, 42, 0.85);
+            width: 58px; height: 58px; border-radius: 50%;
+            background: rgba(15, 23, 42, 0.9);
             border: 2px solid #00f3ff; color: #00f3ff;
-            font-size: 11px; font-weight: bold;
+            font-size: 10px; font-weight: bold;
             display: flex; align-items: center; justify-content: center;
         }
-        .btn-fps:active { background: #00f3ff; color: #000; }
         #btnDisparar {
             width: 82px; height: 82px; border-radius: 50%;
-            background: rgba(255, 0, 85, 0.35);
+            background: rgba(255, 0, 85, 0.4);
             border: 3px solid #ff0055; color: #fff;
             font-size: 14px; font-weight: bold;
             box-shadow: 0 0 20px rgba(255, 0, 85, 0.5);
             display: flex; align-items: center; justify-content: center;
         }
-        #btnDisparar:active { background: rgba(255, 0, 85, 0.8); transform: scale(0.93); }
-
-        /* Pantallas */
         .pantalla-overlay {
-            position: fixed; inset: 0; background: rgba(5, 8, 15, 0.94);
+            position: fixed; inset: 0; background: rgba(5, 8, 15, 0.96);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             text-align: center; z-index: 50; padding: 20px; color: #fff;
         }
-        h1 { font-size: 32px; color: #00f3ff; margin: 0 0 8px; letter-spacing: 2px; text-shadow: 0 0 15px #00f3ff; }
-        .sub { color: #ffaa00; font-weight: bold; margin-bottom: 15px; font-size: 14px; }
-        p { color: #cbd5e1; font-size: 15px; max-width: 310px; line-height: 1.5; margin-bottom: 25px; }
+        h1 { font-size: 32px; color: #00f3ff; margin: 0 0 8px; letter-spacing: 2px; }
+        p { color: #cbd5e1; font-size: 15px; max-width: 300px; line-height: 1.5; margin-bottom: 25px; }
         .btn-start {
-            padding: 16px 40px; font-size: 18px; font-weight: bold;
+            padding: 18px 42px; font-size: 18px; font-weight: bold;
             background: linear-gradient(90deg, #ffaa00, #ff0055);
-            border: none; border-radius: 8px; color: #fff;
-            box-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
+            border: none; border-radius: 10px; color: #fff;
+            box-shadow: 0 0 25px rgba(255, 0, 85, 0.6);
+            cursor: pointer;
         }
         #dano-flash {
             position: fixed; inset: 0; background: rgba(255, 0, 0, 0.35);
@@ -109,7 +96,7 @@
     <div id="dano-flash"></div>
 
     <div id="hud">
-        <canvas id="radar" width="95" height="95"></canvas>
+        <canvas id="radar" width="90" height="90"></canvas>
         <div class="stats-derecha">
             <div class="caja-hud">BAJAS: <span id="bajas-txt" style="color:#00f3ff;">0</span> | OLEADA: <span id="oleada-txt" style="color:#ffaa00;">1</span></div>
             <div class="caja-hud">
@@ -132,16 +119,16 @@
     </div>
 
     <div id="menuInicio" class="pantalla-overlay">
-        <div class="sub">OPERACIÓN TÁCTICA FPS</div>
+        <div style="color:#ffaa00; font-weight:bold; font-size:13px; margin-bottom:8px;">OPERACIÓN TÁCTICA FPS</div>
         <h1>BLACK OPS 3D</h1>
-        <p><b>Izquierda:</b> Usa el joystick para moverte.<br><b>Derecha:</b> Desliza para apuntar y toca FUEGO para disparar.</p>
-        <button class="btn-start" id="btnIniciarReal">ENTRAR AL COMBATE</button>
+        <p><b>Izquierda:</b> Joystick para caminar.<br><b>Derecha:</b> Desliza para apuntar y toca FUEGO.</p>
+        <button class="btn-start" id="btnStart1">ENTRAR AL COMBATE</button>
     </div>
 
     <div id="menuOver" class="pantalla-overlay" style="display:none;">
-        <h1 style="color:#ff0055; text-shadow:0 0 15px #ff0055;">SOLDADO ABATIDO</h1>
+        <h1 style="color:#ff0055;">SOLDADO ABATIDO</h1>
         <p id="statsFinales">Bajas confirmadas: 0</p>
-        <button class="btn-start" id="btnReintentarReal">VOLVER A DESPLEGAR</button>
+        <button class="btn-start" id="btnStart2">VOLVER A DESPLEGAR</button>
     </div>
 
     <canvas id="pantalla3D"></canvas>
@@ -159,38 +146,37 @@
             H = canvas.height = window.innerHeight;
         });
 
-        // Mapa de la Arena 3D (1 = Muro, 2 = Muro Neón, 0 = Espacio libre)
-        const MAPA = [,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        // Mapa construido con texto plano para evitar cualquier error de formato
+        const PLANO_MAPA = [
+            "111111111111",
+            "100000000001",
+            "100220022001",
+            "100200002001",
+            "100000000001",
+            "102001100201",
+            "102001100201",
+            "100000000001",
+            "100200002001",
+            "100220022001",
+            "100000000001",
+            "111111111111"
         ];
 
-        // Estado del Juego
-        let jugando = false;
-        let jugador = { x: 2.5, y: 2.5, dir: 0, salud: 100, balas: 30, recargando: false, zoom: false };
-        let enemigos = [];
-        let bajas = 0;
-        let oleada = 1;
-        let retrocesoArma = 0;
-        let destelloDisparo = 0;
-        let pasoAnim = 0;
-        let joyX = 0, joyY = 0;
-        let disparando = false;
-        let ultimoDisparo = 0;
-        let ultimoFrame = 0;
+        function obtenerCelda(x, y) {
+            const ix = Math.floor(x);
+            const iy = Math.floor(y);
+            if (iy < 0 || iy >= PLANO_MAPA.length || ix < 0 || ix >= PLANO_MAPA[0].length) {
+                return 1;
+            }
+            return parseInt(PLANO_MAPA[iy].charAt(ix), 10);
+        }
 
-        // Audio Sintetizado Seguro
+        let jugando = false;
+        let jugador = { x: 2.5, y: 1.5, dir: 0.8, salud: 100, balas: 30, recargando: false, zoom: false };
+        let enemigos = [];
+        let bajas = 0, oleada = 1, retrocesoArma = 0, destelloDisparo = 0, pasoAnim = 0;
+        let joyX = 0, joyY = 0, disparando = false, ultimoDisparo = 0, ultimoFrame = 0;
+
         let audioCtx = null;
         function sonido(tipo) {
             try {
@@ -198,38 +184,49 @@
                 if (audioCtx.state === "suspended") audioCtx.resume();
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                osc.connect(gain); gain.connect(audioCtx.destination);
                 const t = audioCtx.currentTime;
-
                 if (tipo === "tiro") {
-                    osc.type = "sawtooth";
-                    osc.frequency.setValueAtTime(320, t);
-                    osc.frequency.exponentialRampToValueAtTime(55, t + 0.08);
-                    gain.gain.setValueAtTime(0.15, t);
-                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+                    osc.type = "sawtooth"; osc.frequency.setValueAtTime(300, t);
+                    osc.frequency.exponentialRampToValueAtTime(50, t + 0.08);
+                    gain.gain.setValueAtTime(0.12, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
                     osc.start(t); osc.stop(t + 0.08);
                 } else if (tipo === "hit") {
-                    osc.type = "sine";
-                    osc.frequency.setValueAtTime(900, t);
-                    gain.gain.setValueAtTime(0.1, t);
-                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+                    osc.type = "sine"; osc.frequency.setValueAtTime(850, t);
+                    gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
                     osc.start(t); osc.stop(t + 0.05);
-                } else if (tipo === "recarga") {
-                    osc.type = "triangle";
-                    osc.frequency.setValueAtTime(220, t);
-                    osc.frequency.setValueAtTime(440, t + 0.12);
-                    gain.gain.setValueAtTime(0.1, t);
-                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-                    osc.start(t); osc.stop(t + 0.25);
                 }
             } catch (err) {}
         }
 
-        // Controles: Joystick Izquierdo
+        // Joystick
         const zonaJoy = document.getElementById("zona-joystick");
         const palanca = document.getElementById("palanca");
         let joyTouchId = null;
 
         zonaJoy.addEventListener("touchstart", (e) => {
             e.preventDefault();
+            joyTouchId = e.changedTouches[0].identifier;
+            moverJoystick(e.changedTouches[0]);
+        }, { passive: false });
+
+        zonaJoy.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === joyTouchId) moverJoystick(e.changedTouches[i]);
+            }
+        }, { passive: false });
+
+        const soltarJoy = (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === joyTouchId) {
+                    joyTouchId = null; joyX = 0; joyY = 0;
+                    palanca.style.transform = "translate(0px, 0px)";
+                }
+            }
+        };
+        zonaJoy.addEventListener("touchend", soltarJoy);
+        zonaJoy.addEventListener("touchcancel", soltarJoy);
+
+        function moverJoystick(touch) {
+            const rect = zonaJoy.getBoundingClientRect();
