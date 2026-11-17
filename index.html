@@ -2,226 +2,243 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Cyber Soldier 3D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CYBER STRIKE 3D</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #05070d; font-family: 'Segoe UI', sans-serif; touch-action: none; user-select: none; }
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+        body {
+            margin: 0; padding: 0; background: #04060c;
+            overflow: hidden; touch-action: none;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+        canvas { display: block; width: 100vw; height: 100vh; }
+
+        /* HUD Superior */
         #hud {
-            position: absolute; top: 15px; left: 15px; right: 15px;
+            position: fixed; top: 15px; left: 15px; right: 15px;
             display: flex; justify-content: space-between; align-items: center;
-            color: #00f3ff; font-size: 18px; font-weight: bold;
-            text-shadow: 0 0 8px #00f3ff; pointer-events: none; z-index: 10;
+            pointer-events: none; z-index: 10;
         }
-        #barraVidaCont {
-            width: 120px; height: 14px; background: rgba(255,255,255,0.15);
-            border: 1px solid #00f3ff; border-radius: 7px; overflow: hidden;
+        .panel-hud {
+            background: rgba(10, 18, 35, 0.75);
+            border: 1px solid rgba(0, 243, 255, 0.4);
+            padding: 8px 14px; border-radius: 10px;
+            color: #00f3ff; font-weight: bold; font-size: 16px;
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
         }
-        #barraVida { width: 100%; height: 100%; background: linear-gradient(90deg, #00ff88, #00f3ff); transition: width 0.2s; }
+        #vida-box {
+            width: 120px; height: 12px; background: rgba(255, 255, 255, 0.15);
+            border-radius: 6px; overflow: hidden; margin-top: 4px;
+        }
+        #vida-bar {
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00f3ff);
+            transition: width 0.15s ease-out;
+        }
+
+        /* Controles Táctiles */
         #controles {
-            position: absolute; bottom: 20px; left: 18px; right: 18px;
+            position: fixed; bottom: 22px; left: 18px; right: 18px;
             display: flex; justify-content: space-between; align-items: flex-end;
-            z-index: 15; pointer-events: none;
+            z-index: 20; pointer-events: none;
         }
-        .grupo-izq, .grupo-der { display: flex; gap: 12px; pointer-events: auto; align-items: center; }
+        .grupo-botones { display: flex; gap: 14px; pointer-events: auto; align-items: center; }
         .btn {
-            width: 64px; height: 64px; border-radius: 50%;
-            background: rgba(0, 243, 255, 0.15);
+            width: 66px; height: 66px; border-radius: 50%;
+            background: rgba(0, 243, 255, 0.14);
             border: 2px solid #00f3ff; color: #00f3ff;
-            font-size: 22px; font-weight: bold;
+            font-size: 24px; font-weight: bold;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 12px rgba(0, 243, 255, 0.3);
-            backdrop-filter: blur(4px);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.25);
         }
-        .btn:active { background: rgba(0, 243, 255, 0.5); transform: scale(0.93); }
-        #btnSaltar {
-            width: 56px; height: 56px; font-size: 13px;
+        .btn.presionado { background: rgba(0, 243, 255, 0.5); transform: scale(0.92); }
+        #btnSalto {
+            width: 56px; height: 56px; font-size: 12px;
             border-color: #00ff88; color: #00ff88;
-            background: rgba(0, 255, 136, 0.15);
+            background: rgba(0, 255, 136, 0.14);
         }
+        #btnSalto.presionado { background: rgba(0, 255, 136, 0.5); }
         #btnFuego {
-            width: 78px; height: 78px; font-size: 15px;
-            background: rgba(255, 0, 127, 0.25);
-            border: 2px solid #ff007f; color: #ff007f;
-            box-shadow: 0 0 18px rgba(255, 0, 127, 0.5);
+            width: 80px; height: 80px; font-size: 15px;
+            border-color: #ff007f; color: #ff007f;
+            background: rgba(255, 0, 127, 0.2);
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.4);
         }
-        #btnFuego:active { background: rgba(255, 0, 127, 0.65); transform: scale(0.93); }
-        #gameover {
-            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.88);
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            color: #ff007f; text-align: center; z-index: 25;
+        #btnFuego.presionado { background: rgba(255, 0, 127, 0.6); transform: scale(0.92); }
+
+        /* Pantallas de Inicio y Game Over */
+        .pantalla {
+            position: fixed; inset: 0; background: rgba(4, 6, 12, 0.9);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; z-index: 30; padding: 20px;
         }
-        h1 { font-size: 32px; margin: 0 0 10px; text-shadow: 0 0 15px #ff007f; }
-        p { color: #fff; font-size: 18px; margin-bottom: 25px; }
-        #btnReiniciar {
-            padding: 14px 32px; font-size: 17px; font-weight: bold;
+        h1 {
+            font-size: 34px; margin: 0 0 10px; color: #00f3ff;
+            text-shadow: 0 0 18px #00f3ff; letter-spacing: 2px;
+        }
+        p { color: #cbd5e1; font-size: 16px; max-width: 300px; line-height: 1.5; margin-bottom: 25px; }
+        .btn-jugar {
+            padding: 15px 38px; font-size: 18px; font-weight: bold;
             background: linear-gradient(90deg, #00f3ff, #00ff88);
-            border: none; border-radius: 30px; color: #000;
-            box-shadow: 0 0 20px #00f3ff;
+            border: none; border-radius: 30px; color: #04060c;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.6);
         }
     </style>
-    <script src="https://cloudflare.com"></script>
 </head>
 <body>
 
     <div id="hud">
-        <div>BAJAS: <span id="puntos">0</span></div>
-        <div id="barraVidaCont"><div id="barraVida"></div></div>
+        <div class="panel-hud">
+            <div>SALUD</div>
+            <div id="vida-box"><div id="vida-bar"></div></div>
+        </div>
+        <div class="panel-hud" style="text-align: right;">
+            <div>PUNTOS: <span id="txtPuntos">0</span></div>
+            <div style="font-size: 12px; color: #00ff88;">RÉCORD: <span id="txtRecord">0</span></div>
+        </div>
     </div>
 
     <div id="controles">
-        <div class="grupo-izq">
+        <div class="grupo-botones">
             <div class="btn" id="btnIzq">◀</div>
             <div class="btn" id="btnDer">▶</div>
         </div>
-        <div class="grupo-der">
-            <div class="btn" id="btnSaltar">SALTO</div>
+        <div class="grupo-botones">
+            <div class="btn" id="btnSalto">SALTO</div>
             <div class="btn" id="btnFuego">FUEGO</div>
         </div>
     </div>
 
-    <div id="gameover">
-        <h1>SOLDADO CAÍDO</h1>
-        <p id="finalPuntos">Enemigos eliminados: 0</p>
-        <button id="btnReiniciar" onclick="reiniciar()">REAPARECER</button>
+    <!-- Pantalla de Inicio -->
+    <div id="pantallaInicio" class="pantalla">
+        <h1>CYBER STRIKE 3D</h1>
+        <p>Elimina a los drones enemigos antes de que crucen tu línea defensiva. Usa los botones inferiores para moverte, saltar y disparar.</p>
+        <button class="btn-jugar" onclick="comenzarJuego()">INICIAR MISIÓN</button>
     </div>
 
+    <!-- Pantalla Game Over -->
+    <div id="pantallaOver" class="pantalla" style="display: none;">
+        <h1 style="color: #ff007f; text-shadow: 0 0 18px #ff007f;">MISIÓN FALLIDA</h1>
+        <p id="resumenPuntos">Puntuación final: 0</p>
+        <button class="btn-jugar" onclick="comenzarJuego()">REINTENTAR</button>
+    </div>
+
+    <canvas id="lienzo"></canvas>
+
     <script>
-        let scene, camera, renderer, soldado, piernaIzq, piernaDer, brazoArma, fogonazo, grid;
-        let balas = [], enemigos = [], particulas = [];
-        let puntos = 0, vida = 100, frame = 0, activo = true;
-        let movIzq = false, movDer = false, disparando = false, ultimoDisparo = 0;
-        let velY = 0, enSuelo = true;
+        const canvas = document.getElementById("lienzo");
+        const ctx = canvas.getContext("2d");
 
-        const txtPuntos = document.getElementById("puntos");
-        const barraVida = document.getElementById("barraVida");
-        const screenOver = document.getElementById("gameover");
-        const txtFinal = document.getElementById("finalPuntos");
+        let W, H, horizonteY, fov;
+        function ajustarPantalla() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+            horizonteY = H * 0.36;
+            fov = W * 0.85;
+        }
+        window.addEventListener("resize", ajustarPantalla);
+        ajustarPantalla();
 
-        function crearSoldado() {
-            const grupo = new THREE.Group();
+        // Sintetizador de Audio Web (Sin archivos externos)
+        let audioCtx = null;
+        function tocarSonido(tipo) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === "suspended") audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const ahora = audioCtx.currentTime;
 
-            const matArmadura = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.7 });
-            const matNeon = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
-            const matArma = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.2 });
-
-            // Torso
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.95, 0.42), matArmadura);
-            torso.position.y = 1.25;
-            grupo.add(torso);
-
-            // Detalle neón en espalda
-            const mochila = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.6, 0.15), matNeon);
-            mochila.position.set(0, 1.3, 0.25);
-            grupo.add(mochila);
-
-            // Cabeza y Visor
-            const cabeza = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.46, 0.46), matArmadura);
-            cabeza.position.y = 2.02;
-            const visor = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.14, 0.1), matNeon);
-            visor.position.set(0, 2.04, -0.2);
-            grupo.add(cabeza, visor);
-
-            // Piernas articuladas
-            piernaIzq = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.78, 0.28), matArmadura);
-            piernaIzq.position.set(-0.2, 0.4, 0);
-            piernaDer = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.78, 0.28), matArmadura);
-            piernaDer.position.set(0.2, 0.4, 0);
-            grupo.add(piernaIzq, piernaDer);
-
-            // Brazo izquierdo
-            const brazoIzq = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.65, 0.2), matArmadura);
-            brazoIzq.position.set(-0.5, 1.35, -0.15);
-            brazoIzq.rotation.x = 0.6;
-            grupo.add(brazoIzq);
-
-            // Brazo derecho + Rifle de asalto
-            brazoArma = new THREE.Group();
-            brazoArma.position.set(0.5, 1.45, 0);
-
-            const brazoDer = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.55, 0.2), matArmadura);
-            brazoDer.position.set(0, -0.1, -0.25);
-            brazoDer.rotation.x = Math.PI / 2;
-
-            const rifle = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.2, 1.1), matArma);
-            rifle.position.set(0, -0.05, -0.65);
-
-            const miraLaser = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.9), matNeon);
-            miraLaser.position.set(0, 0.07, -0.65);
-
-            // Destello del disparo
-            fogonazo = new THREE.Mesh(new THREE.SphereGeometry(0.18, 6, 6), new THREE.MeshBasicMaterial({ color: 0x00ff88 }));
-            fogonazo.position.set(0, -0.05, -1.25);
-            fogonazo.visible = false;
-
-            brazoArma.add(brazoDer, rifle, miraLaser, fogonazo);
-            grupo.add(brazoArma);
-
-            return grupo;
+                if (tipo === "disparo") {
+                    osc.type = "sawtooth";
+                    osc.frequency.setValueAtTime(650, ahora);
+                    osc.frequency.exponentialRampToValueAtTime(110, ahora + 0.09);
+                    gain.gain.setValueAtTime(0.08, ahora);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ahora + 0.09);
+                    osc.start(ahora); osc.stop(ahora + 0.09);
+                } else if (tipo === "explosion") {
+                    osc.type = "square";
+                    osc.frequency.setValueAtTime(140, ahora);
+                    osc.frequency.exponentialRampToValueAtTime(30, ahora + 0.22);
+                    gain.gain.setValueAtTime(0.14, ahora);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ahora + 0.22);
+                    osc.start(ahora); osc.stop(ahora + 0.22);
+                } else if (tipo === "dano") {
+                    osc.type = "triangle";
+                    osc.frequency.setValueAtTime(90, ahora);
+                    osc.frequency.linearRampToValueAtTime(45, ahora + 0.25);
+                    gain.gain.setValueAtTime(0.2, ahora);
+                    gain.gain.linearRampToValueAtTime(0.001, ahora + 0.25);
+                    osc.start(ahora); osc.stop(ahora + 0.25);
+                }
+            } catch (e) {}
         }
 
-        function crearEnemigo3D() {
-            const grupo = new THREE.Group();
-            const matCuerpo = new THREE.MeshStandardMaterial({ color: 0x2a0818, metalness: 0.6, roughness: 0.3 });
-            const matOjo = new THREE.MeshBasicMaterial({ color: 0xff007f });
-
-            const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(0.85, 1.1, 0.5), matCuerpo);
-            cuerpo.position.y = 1.1;
-            const cabeza = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.45, 0.5), matCuerpo);
-            cabeza.position.y = 1.95;
-            const ojo = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.14, 0.1), matOjo);
-            ojo.position.set(0, 1.95, 0.24);
-
-            grupo.add(cuerpo, cabeza, ojo);
-            return grupo;
+        // Proyección 3D -> 2D
+        function proyectar(x, y, z) {
+            const escala = fov / (fov + z);
+            const sx = W / 2 + x * escala;
+            const sy = horizonteY + (y + 160) * escala;
+            return { x: sx, y: sy, escala };
         }
 
-        function init() {
-            scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x05070d, 0.032);
+        // Variables de estado
+        let activo = false;
+        let puntos = 0;
+        let record = localStorage.getItem("cyberStrike3DRecord") || 0;
+        document.getElementById("txtRecord").innerText = record;
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.set(0, 3.6, 7.2);
-            camera.lookAt(0, 1.2, -5);
+        let jugador = { x: 0, y: 0, vy: 0, enSuelo: true, retroceso: 0, paso: 0 };
+        let balas = [];
+        let enemigos = [];
+        let particulas = [];
+        let estrellas = [];
+        let gridOffset = 0;
+        let ultimoTiempo = 0;
+        let tiempoSpawn = 0;
+        let tiempoDisparo = 0;
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setClearColor(0x05070d);
-            document.body.appendChild(renderer.domElement);
-
-            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-            const luz = new THREE.DirectionalLight(0x00f3ff, 1.3);
-            luz.position.set(4, 12, 8);
-            scene.add(luz);
-
-            grid = new THREE.GridHelper(60, 40, 0x00f3ff, 0x162038);
-            scene.add(grid);
-
-            soldado = crearSoldado();
-            soldado.position.set(0, 0, 3.2);
-            scene.add(soldado);
-
-            configurarBotones();
-
-            window.addEventListener("resize", () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-
-            animar();
-        }
-
-        function configurarBotones() {
-            const bIzq = document.getElementById("btnIzq");
-            const bDer = document.getElementById("btnDer");
-            const bSaltar = document.getElementById("btnSaltar");
-            const bFuego = document.getElementById("btnFuego");
-
-            bIzq.addEventListener("touchstart", (e) => { e.preventDefault(); movIzq = true; });
-            bIzq.addEventListener("touchend", () => movIzq = false);
-
-            bDer.addEventListener("touchstart", (e) => { e.preventDefault(); movDer = true; });
-            bDer.addEventListener("touchend", () => movDer = false);
-
-            bSaltar.addEventListener("touchstart", (e) => {
+        // Controles
+        const estadoBotones = { izq: false, der: false, fuego: false };
+        function enlazarBoton(id, clave) {
+            const el = document.getElementById(id);
+            el.addEventListener("touchstart", (e) => {
                 e.preventDefault();
+                estadoBotones[clave] = true;
+                el.classList.add("presionado");
+            });
+            el.addEventListener("touchend", (e) => {
+                e.preventDefault();
+                estadoBotones[clave] = false;
+                el.classList.remove("presionado");
+            });
+        }
+        enlazarBoton("btnIzq", "izq");
+        enlazarBoton("btnDer", "der");
+        enlazarBoton("btnFuego", "fuego");
+
+        document.getElementById("btnSalto").addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            const el = document.getElementById("btnSalto");
+            el.classList.add("presionado");
+            if (activo && jugador.enSuelo) {
+                jugador.vy = -480;
+                jugador.enSuelo = false;
+            }
+        });
+        document.getElementById("btnSalto").addEventListener("touchend", (e) => {
+            e.preventDefault();
+            document.getElementById("btnSalto").classList.remove("presionado");
+        });
+
+        // Inicializar estrellas de fondo
+        for (let i = 0; i < 45; i++) {
+            estrellas.push({
+                x: Math.random() * 2000 - 1000,
+                y: Math.random() * 350 - 380,
+                r: Math.random() * 1.8 + 0.5
+            });
+        }
+
